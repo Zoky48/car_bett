@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Traffic Bet Arena</title>
+    <style>
+      :root {
+        --bg: #090d12;
+        --panel: rgba(17, 24, 31, 0.96);
+        --panel-alt: rgba(21, 30, 38, 0.98);
+        --line: rgba(145, 158, 171, 0.18);
+        --text: #edf4ff;
+        --muted: #94a3b8;
+        --gold: #f5c76d;
+        --green: #52d49b;
+        --red: #ff5d73;
+        --blue: #5aaaf7;
+        --shadow: 0 25px 50px rgba(0, 0, 0, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: Inter, "Segoe UI", sans-serif;
+        background: radial-gradient(circle at top, #101a25 0%, var(--bg) 55%);
+        color: var(--text);
+      }
+
+      .shell {
+        width: min(1400px, 96vw);
+        margin: 32px auto;
+      }
+
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 26px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .brand-mark {
+        width: 42px;
+        height: 42px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #f5c76d, #ff8d4d);
+        position: relative;
+        box-shadow: 0 18px 32px rgba(245, 199, 109, 0.35);
+      }
+
+      .brand-mark::before {
+        content: "";
+        position: absolute;
+        inset: 10px;
+        border-radius: 8px;
+        border: 2px solid rgba(0,0,0,0.35);
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(1.5rem, 2vw, 2.3rem);
+        letter-spacing: 0.04em;
+      }
+
+      .round-pill {
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: rgba(90, 170, 247, 0.09);
+        border: 1px solid rgba(90,170,247,0.3);
+        color: #b7d4ff;
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.9fr);
+        gap: 24px;
+      }
+
+      .panel {
+        background: linear-gradient(180deg, rgba(13, 18, 24, 0.98), rgba(17, 23, 30, 0.96));
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        box-shadow: var(--shadow);
+      }
+
+      .video-panel {
+        padding: 14px;
+      }
+
+      .video-shell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 20px;
+        min-height: 520px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: #000;
+      }
+
+      #videoFeed {
+        width: 100%;
+        height: 100%;
+        min-height: 520px;
+        object-fit: cover;
+        display: block;
+        background: linear-gradient(135deg, #0a0a0d, #1b1a23);
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      .overlay-top {
+        position: absolute;
+        top: 18px;
+        left: 18px;
+        right: 18px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .stat-box {
+        background: rgba(12, 18, 25, 0.76);
+        border: 1px solid rgba(255,255,255,0.12);
+        backdrop-filter: blur(12px);
+        border-radius: 14px;
+        padding: 12px 16px;
+        min-width: 170px;
+      }
+
+      .stat-label {
+        display: block;
+        color: var(--muted);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        margin-bottom: 6px;
+      }
+
+      .stat-value {
+        font-size: clamp(1.5rem, 2vw, 2.4rem);
+        font-weight: 800;
+        line-height: 1;
+      }
+
+      .count-value { color: var(--gold); }
+      .timer-value { color: var(--blue); }
+
+      .status-bar {
+        position: absolute;
+        bottom: 18px;
+        left: 18px;
+        right: 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .status-pill,
+      .mini-tag {
+        border-radius: 999px;
+        padding: 10px 18px;
+        background: rgba(7, 11, 17, 0.6);
+        border: 1px solid rgba(255,255,255,0.08);
+        font-size: 0.82rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .status-pill {
+        color: var(--text);
+      }
+
+      .mini-tag {
+        color: var(--muted);
+      }
+
+      .bet-panel {
+        padding: 22px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .section-label {
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        font-size: 0.72rem;
+      }
+
+      .market-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .market-btn {
+        width: 100%;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, rgba(19,29,38,1), rgba(11,17,22,1));
+        color: var(--text);
+        border-radius: 16px;
+        padding: 14px 16px;
+        text-align: left;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: 0.18s ease;
+      }
+
+      .market-btn:hover,
+      .market-btn.selected {
+        border-color: rgba(245,199,109,0.35);
+        background: linear-gradient(180deg, rgba(32,29,20,1), rgba(18,16,12,1));
+        box-shadow: 0 0 0 1px rgba(245,199,109,0.15);
+      }
+
+      .market-label {
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+
+      .market-odds {
+        color: var(--gold);
+        font-weight: 800;
+      }
+
+      .better-input {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+      }
+
+      input[type="number"] {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: rgba(10,15,20,0.9);
+        color: var(--text);
+        font-size: 1rem;
+      }
+
+      .primary-btn {
+        border: none;
+        border-radius: 14px;
+        padding: 14px 18px;
+        background: linear-gradient(135deg, #ffbf5a, #ff8d4d);
+        color: #17120d;
+        font-weight: 900;
+        cursor: pointer;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .bet-summary {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(19,27,33,0.8);
+        border: 1px solid rgba(255,255,255,0.08);
+        color: var(--muted);
+        border-radius: 16px;
+        padding: 14px 16px;
+      }
+
+      .summary-value {
+        color: var(--text);
+        font-weight: 800;
+      }
+
+      .result-box {
+        background: rgba(16, 24, 29, 0.94);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 18px;
+      }
+
+      .result-box h3 {
+        margin: 0 0 10px;
+        font-size: 1.1rem;
+      }
+
+      .result-line {
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .result-win {
+        color: var(--green);
+      }
+
+      .result-loss {
+        color: var(--red);
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark"></div>
+          <h1>Traffic Bet Arena</h1>
+        </div>
+        <div class="round-pill">Round <span id="roundNumber">1</span></div>
+      </header>
+
+      <main class="layout">
+        <section class="panel video-panel">
+          <div class="video-shell">
+            <img id="videoFeed" alt="Traffic camera feed" />
+            <div class="overlay">
+              <div class="overlay-top">
+                <div class="stat-box">
+                  <span class="stat-label">Crossed</span>
+                  <span id="crossCount" class="stat-value count-value">0</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Timer</span>
+                  <span id="timerValue" class="stat-value timer-value">8</span>
+                </div>
+              </div>
+              <div class="status-bar">
+                <div id="statusPill" class="status-pill">Betting Open</div>
+                <div class="mini-tag">Live Stream</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel bet-panel">
+          <div>
+            <div class="section-label">Markets</div>
+          </div>
+
+          <div id="markets" class="market-list"></div>
+
+          <div class="better-input">
+            <input id="betAmount" type="number" min="1" step="1" value="25" aria-label="Bet amount" />
+            <button id="placeBetBtn" class="primary-btn">Place Bet</button>
+          </div>
+
+          <div class="bet-summary">
+            <span>Current bet</span>
+            <span id="selectedBet" class="summary-value">No bet selected</span>
+          </div>
+
+          <div class="result-box">
+            <h3>Round Status</h3>
+            <div id="resultText" class="result-line">Waiting for next round.</div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script>
+      const statusPill = document.getElementById('statusPill');
+      const crossCount = document.getElementById('crossCount');
+      const timerValue = document.getElementById('timerValue');
+      const roundNumber = document.getElementById('roundNumber');
+      const marketsContainer = document.getElementById('markets');
+      const selectedBet = document.getElementById('selectedBet');
+      const resultText = document.getElementById('resultText');
+      const betAmount = document.getElementById('betAmount');
+      const placeBetBtn = document.getElementById('placeBetBtn');
+      const videoFeed = document.getElementById('videoFeed');
+
+      let currentMarket = null;
+
+      function renderMarkets(options) {
+        marketsContainer.innerHTML = '';
+        options.forEach((option) => {
+          const btn = document.createElement('button');
+          btn.className = 'market-btn';
+          btn.type = 'button';
+          btn.innerHTML = `
+            <div>
+              <div class="market-label">${option.label}</div>
+            </div>
+            <div class="market-odds">${option.odds.toFixed(2)}x</div>
+          `;
+          btn.addEventListener('click', () => {
+            currentMarket = option;
+            document.querySelectorAll('.market-btn').forEach((node) => node.classList.remove('selected'));
+            btn.classList.add('selected');
+            selectedBet.textContent = `${option.label} • $${betAmount.value || 0}`;
+          });
+          marketsContainer.appendChild(btn);
+        });
+      }
+
+      function updateDashboard(data) {
+        if (!data) return;
+
+        const phase = data.phase || 'betting_open';
+        roundNumber.textContent = data.round_number || 1;
+        crossCount.textContent = data.crossed_vehicles || 0;
+        timerValue.textContent = data.timer || 0;
+        statusPill.textContent = data.status_text || 'Betting Open';
+
+        if (data.market_options) {
+          renderMarkets(data.market_options);
+          if (currentMarket == null && data.market_options.length) {
+            currentMarket = data.market_options[0];
+            const firstBtn = document.querySelector('.market-btn');
+            if (firstBtn) firstBtn.classList.add('selected');
+          }
+        }
+
+        const bet = data.player_bet;
+        if (bet) {
+          const market = data.market_options.find((m) => m.id === bet.market_id);
+          selectedBet.textContent = market ? `${market.label} • $${bet.amount}` : `$${bet.amount}`;
+        } else if (currentMarket) {
+          selectedBet.textContent = `${currentMarket.label} • $${betAmount.value || 0}`;
+        } else {
+          selectedBet.textContent = 'No bet selected';
+        }
+
+        if (data.result) {
+          const marketLabel = data.market_options.find((m) => m.id === data.result.winner)?.label || 'Outcome';
+          const payout = Number(data.result.your_payout || 0);
+          const isWin = payout > 0;
+          resultText.className = 'result-line ' + (isWin ? 'result-win' : 'result-loss');
+          resultText.innerHTML = `${data.result.message || 'Round complete'}<br>Winner: <strong>${marketLabel}</strong><br>Payout: <strong>$${payout.toFixed(2)}</strong>`;
+        } else {
+          resultText.className = 'result-line';
+          resultText.textContent = phase === 'counting' ? 'Counting in progress...' : 'Waiting for next round.';
+        }
+
+        if (data.frame) {
+          videoFeed.src = `data:image/jpeg;base64,${data.frame}`;
+        }
+      }
+
+      async function placeBet() {
+        if (!currentMarket) {
+          alert('Select a betting option first');
+          return;
+        }
+
+        const amount = Number(betAmount.value);
+        if (!amount || amount <= 0) {
+          alert('Enter a valid bet amount');
+          return;
+        }
+
+        const response = await fetch('/api/place_bet', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ option_id: currentMarket.id, amount })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          alert(data.detail || 'Could not place bet.');
+          return;
+        }
+
+        selectedBet.textContent = `${currentMarket.label} • $${amount}`;
+      }
+
+      placeBetBtn.addEventListener('click', placeBet);
+
+      async function loadInitialState() {
+        const response = await fetch('/api/state');
+        const data = await response.json();
+        updateDashboard(data);
+      }
+
+      loadInitialState();
+
+      const socket = new WebSocket(`ws://${location.host}/ws`);
+      socket.onopen = () => console.log('Socket connected');
+      socket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        if (message && message.type === 'state') {
+          updateDashboard(message.data);
+        }
+      };
+      socket.onerror = () => console.warn('WebSocket unavailable. Falling back to polling.');
+      socket.onclose = () => console.log('WebSocket closed');
+
+      setInterval(async () => {
+        try {
+          const response = await fetch('/api/state');
+          const data = await response.json();
+          updateDashboard(data);
+        } catch (error) {
+          // Ignore if the backend is still booting
+        }
+      }, 1500);
+    </script>
+  </body>
+</html>
